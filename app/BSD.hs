@@ -1,8 +1,5 @@
 module BSD where
 
-
-import System.Process.Typed (shell,readProcessStdout,ExitCode(..))
-import Data.Foldable (find)
 import qualified Data.ByteString.Lazy.Char8 as C
 import qualified Data.ByteString.Lazy as B
 import qualified Sysctl as S

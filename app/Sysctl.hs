@@ -20,7 +20,6 @@ import Foreign.Marshal
 import qualified Data.ByteString.Lazy.Char8 as C
 import qualified Data.ByteString.Lazy as B
 import qualified Data.Int as I (Int32)
-import Control.Monad (liftM)
 
 foreign import capi unsafe "sys/sysctl.h sysctlbyname" sysctl :: CString -> Ptr a -> Ptr CSize -> Ptr b -> CSize -> IO CInt
 
@@ -37,10 +36,10 @@ getPageSize :: IO Int
 getPageSize = fmap fromIntegral getpagesize
 
 getHostName :: IO String
-getHostName = alloca $ \buf -> do
+getHostName = alloca $ \(buf :: CString) -> do
   x <- getHostNameLen
+  let y = fromIntegral x :: CSize
   poke buf 256
-  let y = (fromIntegral x) :: CSize
   throwErrnoIfMinus1_ "gethostname" (gethostname buf y)
   peekCAString buf
   
