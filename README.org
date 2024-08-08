@@ -1,0 +1,14 @@
+#+title: hatch
+#+author: Hikari
+
+
+* Hatch
+Hatch is a system fetch for *BSD operating systems.
+
+** How it looks
+[[./Pictures/image.png]]
+
+** How fast is it?
+[[./Pictures/hyperfine.png]]
+
+
