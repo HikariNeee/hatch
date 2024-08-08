@@ -1,0 +1,7 @@
+optimization: 2
+ignore-project: False
+jobs: 2
+
+
+program-options
+  ghc-options: -fdefer-type-errors  -Werror=deferred-type-errors  -Werror=deferred-out-of-scope-variables -fno-defer-typed-holes

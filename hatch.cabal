@@ -1,0 +1,28 @@
+cabal-version:      3.0
+name:               hatch
+version:            0.1.0.0
+-- synopsis:
+-- description:
+license:            BSD-3-Clause
+license-file:       LICENSE
+author:             HikariNee
+maintainer:         quelln@protonmail.com
+-- copyright:
+category:           System
+build-type:         Simple
+extra-doc-files:    CHANGELOG.md
+-- extra-source-files:
+
+common warnings
+    ghc-options: -Wall -threaded -funfolding-use-threshold=16 -O2 -optc-O3
+
+executable hatch
+    import:           warnings
+    main-is:          Main.hs
+    other-modules:    BSD, Common, Sysctl
+    -- other-extensions:
+    build-depends:    base ^>=4.18.2.1,text,bytestring ^>=0.12.1.0,typed-process,directory,prettyprinter,process
+    hs-source-dirs:   app
+    default-extensions: OverloadedStrings, ExtendedDefaultRules, MultiWayIf, Strict
+    default-language: Haskell2010
+
