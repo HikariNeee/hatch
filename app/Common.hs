@@ -8,7 +8,6 @@ import qualified Data.ByteString.Lazy.Char8 as C
 import           Data.Foldable              (find)
 import qualified Sysctl                     as S (getHostName, sysctlReadString)
 import           System.Environment         (getEnv)
-import           System.Info                (os)
 import           System.Process.Typed       (ExitCode (..), readProcessStdout,
                                              shell)
 
@@ -45,9 +44,9 @@ getName = S.sysctlReadString "kern.ostype"
 
 getFiglet :: IO B.ByteString
 getFiglet = do
- x <- getName
+ os <- getName
 
- (err,stdout) <- readProcessStdout $ shell $ "figlet " ++ (C.unpack x)
+ (err,stdout) <- readProcessStdout $ shell $ "figlet " ++ (C.unpack os)
  if err == ExitSuccess then
    return stdout
  else

@@ -25,7 +25,7 @@ getCurrentMemBSD = do
 
 getMemBSD :: IO B.ByteString
 getMemBSD = do
-    x <- getTotalMemBSD
-    y <- getCurrentMemBSD
-    return $ (y <> "MB/") <> (x <> "MB")
+    totalmem <- getTotalMemBSD
+    currentmem <- getCurrentMemBSD
+    return $ (currentmem <> "MB/") <> (totalmem <> "MB")
    

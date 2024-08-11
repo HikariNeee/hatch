@@ -38,8 +38,8 @@ getPageSize = fmap fromIntegral getpagesize
 
 getHostName :: IO String
 getHostName = do
-  y <- getHostNameLen
-  allocaBytes y $ \z -> throwErrnoIfMinus1_ "gethostname" (gethostname z (fromIntegral y :: CSize)) >> peekCAString z
+  len <- getHostNameLen
+  allocaBytes len $ \z -> throwErrnoIfMinus1_ "gethostname" (gethostname z (fromIntegral len :: CSize)) >> peekCAString z
 
 sysctlRead :: CString -> Ptr a -> CSize -> (Ptr a -> CSize -> IO b) -> IO b
 sysctlRead name buf size f = alloca $ \sizePtr -> do
@@ -63,9 +63,9 @@ sysctlRead' name f = do
  allocaBytes (fromIntegral bufSize) $ \buf -> sysctlRead name buf bufSize f
 
 sysctlPeek' :: String -> IO B.ByteString
-sysctlPeek' y = do
-   x <- newCAString y
-   C.pack <$> sysctlRead' x (const . peekCAString)
+sysctlPeek' name = do
+   sysctlname <- newCAString name
+   C.pack <$> sysctlRead' sysctlname (const . peekCAString)
 
 
 sysctlReadInt :: String -> IO Int
@@ -75,4 +75,4 @@ sysctlReadString :: String -> IO B.ByteString
 sysctlReadString = sysctlPeek'
 
 sysctlReadUInt :: String -> IO Int
-sysctlReadUInt x = fmap fromIntegral (sysctlPeek x :: IO CUInt)
+sysctlReadUInt name = fmap fromIntegral (sysctlPeek name :: IO CUInt)
