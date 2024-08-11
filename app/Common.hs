@@ -8,8 +8,7 @@ import qualified Data.ByteString.Lazy.Char8 as C
 import           Data.Foldable              (find)
 import qualified Sysctl                     as S (getHostName, sysctlReadString)
 import           System.Environment         (getEnv)
-import           System.Process.Typed       (ExitCode (..), readProcessStdout,
-                                             shell)
+import           System.Process
 
 getSection :: FilePath -> B.ByteString -> IO B.ByteString
 getSection x y = C.readFile x >>= f
@@ -45,12 +44,8 @@ getName = S.sysctlReadString "kern.ostype"
 getFiglet :: IO B.ByteString
 getFiglet = do
  os <- getName
-
- (err,stdout) <- readProcessStdout $ shell $ "figlet " ++ (C.unpack os)
- if err == ExitSuccess then
-   return stdout
- else
-   fail "Could you create figlet."
+ stdout <- readProcess "figlet" [C.unpack os] []
+ return . C.pack $ stdout
 
 getCPU :: IO B.ByteString
 getCPU = (<>) "\x1b[36mCPU: \x1b[0m" <$!> getCPUBSD

@@ -1,1 +1,3 @@
 dist-newstyle/
+.project.el
+hatch.prof

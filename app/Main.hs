@@ -1,7 +1,7 @@
 module Main where
 
-import qualified Common                     as CE
-import qualified Data.ByteString.Lazy.Char8 as C
+import qualified Common                      as CE
+import qualified Data.ByteString.Lazy.Char8  as C
 
 main :: IO ()
 main = do
@@ -13,5 +13,5 @@ main = do
   displaysrv  <- CE.getDisplayServer
   shell       <- CE.getShell
   version     <- CE.getVersion
-  C.putStrLn figlet
-  C.putStrLn $ C.intercalate "\n" [prettyname,version,username,shell,cpumodel,memory,displaysrv]
+  C.putStrLn $ figlet
+  C.putStrLn $ C.unlines $ (<>) (C.replicate 4 ' ')  <$> [prettyname,version,username,shell,cpumodel,memory,displaysrv]

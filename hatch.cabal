@@ -21,7 +21,7 @@ executable hatch
     main-is:          Main.hs
     other-modules:    BSD, Common, Sysctl
     -- other-extensions:
-    build-depends:    base ^>=4.18.2.1,text,bytestring ^>=0.12.1.0,typed-process,directory,prettyprinter,process
+    build-depends:    base ^>=4.18.2.1,bytestring ^>=0.12.1.0,directory,process
     hs-source-dirs:   app
     default-extensions: OverloadedStrings, ExtendedDefaultRules, MultiWayIf, Strict
     default-language: Haskell2010
