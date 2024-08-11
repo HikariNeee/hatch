@@ -1,18 +1,17 @@
 module Main where
 
-import Common
-import Data.Foldable(traverse_)
+import qualified Common                     as CE
 import qualified Data.ByteString.Lazy.Char8 as C
 
 main :: IO ()
 main = do
-  x <- getPrettyName
---  y <- getFiglet
-  z <- getCPU
-  a <- getMemory
-  b <- getUser
-  c <- getDisplayServer
-  d <- getShell
-  m <- getVersion
- -- C.putStrLn y
-  traverse_ C.putStrLn [x,m,b,d,z,a,c]
+  x <- CE.getPrettyName
+  y <- CE.getFiglet
+  z <- CE.getCPU
+  a <- CE.getMemory
+  b <- CE.getUser
+  c <- CE.getDisplayServer
+  d <- CE.getShell
+  m <- CE.getVersion
+  C.putStrLn y
+  C.putStrLn $ C.intercalate "\n" [x,m,b,d,z,a,c]

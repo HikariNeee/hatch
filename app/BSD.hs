@@ -1,7 +1,7 @@
 module BSD where
 
 import qualified Data.ByteString.Lazy.Char8 as C
-import qualified Data.ByteString.Lazy as B
+import qualified Data.ByteString.Lazy  as B
 import qualified Sysctl as S
 import Control.Monad (liftM)
 
@@ -9,7 +9,7 @@ toDouble :: Int -> Double
 toDouble = fromIntegral
 
 memToMB :: Int -> Int
-memToMB =  round . (flip (/) 1048576) . toDouble
+memToMB =  round . (*)  9.53674316406e-7 . toDouble
 
 getCPUBSD :: IO B.ByteString
 getCPUBSD = liftM (C.unwords . C.words . C.drop 9) $ S.sysctlReadString "hw.model"

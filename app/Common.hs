@@ -1,25 +1,23 @@
 module Common where
 
 
-import System.Environment (getEnv)
-import Data.Foldable (find)
-import System.Process.Typed (readProcessStdout,ExitCode(..),shell)
-import System.Info (os)
+import           BSD                        (getCPUBSD, getMemBSD)
+import           Control.Monad              ((<$!>))
+import qualified Data.ByteString.Lazy       as B
 import qualified Data.ByteString.Lazy.Char8 as C
-import qualified Data.ByteString.Lazy as B
-import qualified Sysctl as S (getHostName,sysctlReadString)
-import BSD (getCPUBSD,getMemBSD)
-import Control.Monad ((<$!>))
-
-mapCPU :: [(B.ByteString, IO B.ByteString)]
-mapCPU = [("freebsd", getCPUBSD)]
+import           Data.Foldable              (find)
+import qualified Sysctl                     as S (getHostName, sysctlReadString)
+import           System.Environment         (getEnv)
+import           System.Info                (os)
+import           System.Process.Typed       (ExitCode (..), readProcessStdout,
+                                             shell)
 
 getSection :: FilePath -> B.ByteString -> IO B.ByteString
 getSection x y = C.readFile x >>= f
  where m = find (y `C.isPrefixOf`) . C.lines
        n = C.length y
        f q = if | Just text <- m q -> return . C.drop n $ text
-                | otherwise -> fail "cannot find name."
+                | otherwise        -> fail "cannot find name."
 
 getUserName :: IO String
 getUserName = getEnv "USER"
@@ -37,7 +35,7 @@ getOSRel :: B.ByteString -> IO B.ByteString
 getOSRel = getSection "/etc/os-release"
 
 getPrettyName :: IO B.ByteString
-getPrettyName = (<>) "\x1b[32mOS: \x1b[0m" . flip (<>) " " <$!> getName 
+getPrettyName = (<>) "\x1b[32mOS: \x1b[0m" . flip (<>) " " <$!> getName
 
 getVersion ::  IO B.ByteString
 getVersion = (<>) "\x1b[38mVersion: \x1b[0m" <$!> S.sysctlReadString "kern.osrelease"
@@ -56,11 +54,7 @@ getFiglet = do
    fail "Could you create figlet."
 
 getCPU :: IO B.ByteString
-getCPU = if | Just y <- x -> (<>) "\x1b[33mCPU: \x1b[0m " <$> y
-            | otherwise   -> fail "cannot determine CPU. OS.unsupported"
-            
- where x = lookup (C.pack $ os) mapCPU
-
+getCPU = (<>) "\x1b[36mCPU: \x1b[0m" <$!> getCPUBSD
 
 getDisplayServer :: IO B.ByteString
 getDisplayServer = (<>) "\x1b[35mServer: \x1b[0m". C.pack <$!> getEnv "XDG_SESSION_TYPE"

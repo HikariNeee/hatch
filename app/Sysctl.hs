@@ -1,9 +1,9 @@
-{-# LANGUAGE ForeignFunctionInterface #-}
 {-# LANGUAGE CApiFFI                  #-}
-{-# LANGUAGE TypeSynonymInstances     #-}
-{-# LANGUAGE FlexibleInstances        #-}
-{-# LANGUAGE ScopedTypeVariables      #-}
 {-# LANGUAGE CPP                      #-}
+{-# LANGUAGE FlexibleInstances        #-}
+{-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE ScopedTypeVariables      #-}
+{-# LANGUAGE TypeSynonymInstances     #-}
 
 module Sysctl where
 
@@ -13,13 +13,14 @@ module Sysctl where
 #define _SC_HOST_NAME_MAX 33
 #endif
 
-import Foreign.Ptr
-import Foreign.C
-import Foreign.Storable
-import Foreign.Marshal
+import qualified Data.ByteString.Lazy       as B
 import qualified Data.ByteString.Lazy.Char8 as C
-import qualified Data.ByteString.Lazy as B
-import qualified Data.Int as I (Int32)
+import qualified Data.Int                   as I (Int32)
+import           Foreign.C
+import           Foreign.Marshal
+import           Foreign.Ptr
+import           Foreign.Storable
+
 
 foreign import capi unsafe "sys/sysctl.h sysctlbyname" sysctl :: CString -> Ptr a -> Ptr CSize -> Ptr b -> CSize -> IO CInt
 
@@ -36,16 +37,12 @@ getPageSize :: IO Int
 getPageSize = fmap fromIntegral getpagesize
 
 getHostName :: IO String
-getHostName = alloca $ \(buf :: CString) -> do
-  x <- getHostNameLen
-  let y = fromIntegral x :: CSize
-  poke buf 256
-  throwErrnoIfMinus1_ "gethostname" (gethostname buf y)
-  peekCAString buf
-  
+getHostName = do
+  y <- getHostNameLen
+  allocaBytes y $ \z -> throwErrnoIfMinus1_ "gethostname" (gethostname z (fromIntegral y :: CSize)) >> peekCAString z
 
 sysctlRead :: CString -> Ptr a -> CSize -> (Ptr a -> CSize -> IO b) -> IO b
-sysctlRead name buf size f = alloca $ \sizePtr -> do 
+sysctlRead name buf size f = alloca $ \sizePtr -> do
    poke sizePtr size
    throwErrnoIfMinus1_ "sysctl" (sysctl name buf sizePtr nullPtr 0)
    realSize <- peek sizePtr
@@ -66,13 +63,13 @@ sysctlRead' name f = do
  allocaBytes (fromIntegral bufSize) $ \buf -> sysctlRead name buf bufSize f
 
 sysctlPeek' :: String -> IO B.ByteString
-sysctlPeek' y = do 
+sysctlPeek' y = do
    x <- newCAString y
-   C.pack <$> sysctlRead' x (const . peekCAString) 
+   C.pack <$> sysctlRead' x (const . peekCAString)
 
 
 sysctlReadInt :: String -> IO Int
-sysctlReadInt = sysctlPeek 
+sysctlReadInt = sysctlPeek
 
 sysctlReadString :: String -> IO B.ByteString
 sysctlReadString = sysctlPeek'
