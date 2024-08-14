@@ -1,26 +1,30 @@
 {-# LANGUAGE CApiFFI                  #-}
-{-# LANGUAGE CPP                      #-}
 {-# LANGUAGE FlexibleInstances        #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
 {-# LANGUAGE ScopedTypeVariables      #-}
 {-# LANGUAGE TypeSynonymInstances     #-}
 
-module Sysctl where
-
-#ifdef freebsd_HOST_OS
-#define _SC_HOST_NAME_MAX 72
-#elif openbsd_HOST_OS
-#define _SC_HOST_NAME_MAX 33
-#endif
+module Sysctl(
+  sysctlReadString,
+  sysctlReadUInt,
+  sysctlReadInt,
+  getPageSize,
+  getHostName,
+  _SC_HOST_NAME_MAX,
+  _POSIX_LOGIN_NAME_MAX,
+  getLogin
+) where
 
 import qualified Data.ByteString.Lazy       as B
 import qualified Data.ByteString.Lazy.Char8 as C
-import qualified Data.Int                   as I (Int32)
 import           Foreign.C
 import           Foreign.Marshal
 import           Foreign.Ptr
 import           Foreign.Storable
 
+foreign import capi unsafe "unistd.h value _SC_HOST_NAME_MAX" _SC_HOST_NAME_MAX :: IO CInt
+
+foreign import capi unsafe "limits.h value _POSIX_LOGIN_NAME_MAX" _POSIX_LOGIN_NAME_MAX :: IO CInt
 
 foreign import capi unsafe "sys/sysctl.h sysctlbyname" sysctl :: CString -> Ptr a -> Ptr CSize -> Ptr b -> CSize -> IO CInt
 
@@ -30,8 +34,20 @@ foreign import capi unsafe "unistd.h gethostname" gethostname :: CString -> CSiz
 
 foreign import capi unsafe "unistd.h getpagesize" getpagesize :: IO CInt
 
+foreign import capi unsafe "unistd.h getlogin_r" getlogin_r :: CString -> CSize -> IO CInt
+
+getLogin :: IO String
+getLogin = do
+  code <- _POSIX_LOGIN_NAME_MAX
+  len <- sysconf code
+  let buflen = (fromIntegral len) :: CSize
+  allocaBytes (fromIntegral len :: Int) $ \buf -> throwErrnoIfMinus1_ "getlogin_r" (getlogin_r buf buflen) >> peekCAString buf
+
 getHostNameLen :: IO Int
-getHostNameLen = fmap (fromIntegral . (+1)) $ sysconf $ CInt (_SC_HOST_NAME_MAX :: I.Int32)
+getHostNameLen = do
+ len <- _SC_HOST_NAME_MAX
+ maxlen <- sysconf len
+ return . fromIntegral . (+1) $ maxlen
 
 getPageSize :: IO Int
 getPageSize = fmap fromIntegral getpagesize
@@ -52,8 +68,7 @@ sysctlGetSize :: CString -> IO CSize
 sysctlGetSize name = sysctlRead name nullPtr 0 (const return)
 
 sysctlPeek :: forall a. (Storable a) => String -> IO a
-sysctlPeek name = do
-  x <- newCAString name
+sysctlPeek name = withCString name $ \x -> do
   alloca $ \(buf :: Ptr a) ->
    sysctlRead x buf (fromIntegral (sizeOf (undefined :: a))) (const . peek)
 
@@ -63,8 +78,7 @@ sysctlRead' name f = do
  allocaBytes (fromIntegral bufSize) $ \buf -> sysctlRead name buf bufSize f
 
 sysctlPeek' :: String -> IO B.ByteString
-sysctlPeek' name = do
-   sysctlname <- newCAString name
+sysctlPeek' name = withCString name $ \sysctlname -> do
    C.pack <$> sysctlRead' sysctlname (const . peekCAString)
 
 
@@ -75,4 +89,4 @@ sysctlReadString :: String -> IO B.ByteString
 sysctlReadString = sysctlPeek'
 
 sysctlReadUInt :: String -> IO Int
-sysctlReadUInt name = fmap fromIntegral (sysctlPeek name :: IO CUInt)
+sysctlReadUInt name = fromIntegral <$> (sysctlPeek name :: IO CUInt)

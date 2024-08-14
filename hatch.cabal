@@ -14,15 +14,13 @@ extra-doc-files:    CHANGELOG.md
 -- extra-source-files:
 
 common warnings
-    ghc-options: -Wall -threaded -funfolding-use-threshold=16 -O2 -optc-O3 -fprof-auto
-
+    ghc-options: -Wall -threaded -O2 -optc-O3 -optc-ffast-math -static -optl=-static "-with-rtsopts=-G1 -H16m -K64m -I0 -V0"
 executable hatch
     import:           warnings
     main-is:          Main.hs
     other-modules:    BSD, Common, Sysctl
     -- other-extensions:
-    build-depends:    base ^>=4.18.2.1,bytestring ^>=0.12.1.0,directory,process
+    build-depends:    base ^>=4.18.2.1,bytestring ^>=0.12.1.0,directory,process,sixel
     hs-source-dirs:   app
-    default-extensions: OverloadedStrings, ExtendedDefaultRules, MultiWayIf, Strict
+    default-extensions: MultiWayIf,OverloadedStrings
     default-language: Haskell2010
-
